@@ -64,10 +64,9 @@ The 32B settings have not yet been validated end to end on serverless.
 | Ray fails at init with a `/local_disk0/tmp` error | `/local_disk0` is not writable on serverless. The pipeline cell sets `RAY_TMPDIR=/tmp/ray`. |
 | `No videos matched ...` in 02 | `CATALOG` / `SCHEMA` differ from the values used in 00, or `CATEGORY_FILTER` doesn't match the downloaded category. |
 | `location` / `confidence` empty in `video_events` | An older copy of 03 without the schema fix. Re-run the structuring cell. |
-| A face is visible in the redacted frame | Detection is automatic and can miss small faces in low-resolution footage. Check the preview, and pick another frame (`FRAME_AT_SECONDS`) if needed. |
+| A face is visible in the redacted frame | Detection is automatic and can miss small faces in low-resolution footage. Check the preview (its axes are in frame pixels), add the missed region to `MANUAL_BOXES` as `x,y,w,h` (separate several with `;`), and re-run from the frame extraction cell. |
 
 ## Known limitations
 
 * A few long videos still run up to `max_tokens` (1024) and are cut off (`finish_reason = length`).
 * `time_range` formats vary (`60 - 75 seconds`, `0:00 - 0:23`), because they come from the model's prose.
-* Ray prints deprecation warnings for `concurrency=` in `map` / `map_batches`; they are harmless.
