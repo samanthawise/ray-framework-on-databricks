@@ -47,11 +47,13 @@ Same 49 shoplifting videos (under 1200 s), same prompt, notebook 03 for the asse
 | CONFIRMED / LIKELY / POSSIBLE / NORMAL / INSUFFICIENT_EVIDENCE | 2 / 12 / 10 / 22 / 3 | 35 / 10 / 2 / 2 / 0 |
 | **Flagged (CONFIRMED or LIKELY)** | **14 / 49 (29%)** | **45 / 49 (92%)** |
 
-**False positives (32B).** On 60 clips from the dataset's `normal` folder, 32B flagged 6 (10%) as CONFIRMED or LIKELY (4 CONFIRMED, 2 LIKELY, 3 POSSIBLE, 2 INSUFFICIENT_EVIDENCE, 49 NORMAL). About two thirds of those clips are offices, streets, or hallways; on the ~24 that look like shops, about 5 were flagged (~20%). The setting comes from the model's `location` field, so that split is approximate.
+**False positives (32B).** On 60 clips from the dataset's `normal` folder, 32B flagged 6 (10%) as CONFIRMED or LIKELY (4 CONFIRMED, 2 LIKELY, 3 POSSIBLE, 2 INSUFFICIENT_EVIDENCE, 49 NORMAL). About two thirds of those clips are offices, streets, or hallways; on the ~24 that look like shops, about 5 were flagged (~20%). The setting comes from the model's `location` field, so that split is approximate. Two of the six flagged clips were watched by eye and both are genuine false positives: a parcel delivery being signed for in an office (reported as "repeated concealment" and "a confrontation with staff") and a woman waiting with a drink in a restaurant (reported as "concealed an item in her bag"). Both were CONFIRMED with confidence 1.0.
 
 **Spot check.** Four clips that 7B called NORMAL and 32B called CONFIRMED were watched by eye. All four were real thefts, so the verdicts held up. The details did not: the item was right in about one of four and the time range in about one of four. In one clip the person picks up a tablet as cover and takes a phone; 32B reported the tablet.
 
-**Takeaway.** 32B is much better at spotting theft than 7B at little extra cost per video, but treat its output as triage that points reviewers at footage, not as a record of what was taken or when. In a real store theft is rare, so most flags will be false alarms.
+**Takeaway.** 32B is much better at spotting theft than 7B at little extra cost per video, but treat its output as triage that points reviewers at footage, not as a record of what was taken or when. In a real store theft is rare, so most flags will be false alarms. Do not filter on `confidence`: invented incidents score as high as real ones.
+
+These numbers come from a public dataset that mixes shops, offices, streets, and restaurants, filmed at 320 px and sampled at ~1 fps, with a generic shoplifting prompt. They are a baseline rather than a ceiling: on a customer's own footage, with site context in the prompt (store layout, normal staff behaviour) and a small labelled evaluation set, the same pipeline can be tuned and measured the same way.
 
 ## Using the 32B model
 
@@ -95,4 +97,6 @@ Every clip in `shoplifting/` is labelled as theft, so that folder alone cannot s
 * A few long videos still run up to `max_tokens` (1024) and are cut off (`finish_reason = length`). With 32B the cut-offs are long conclusions, not loops.
 * `time_range` formats vary (`60 - 75 seconds`, `0:00 - 0:23`), because they come from the model's prose. 32B follows the seconds-from-start instruction more often than 7B, but its times can still be off by tens of seconds.
 * Frames are sampled at ~1 fps from low-resolution (320 px) footage, so brief actions and small figures can be missed or described vaguely.
-* The `normal` labels come from the dataset and have not been checked frame by frame.
+* The `normal` labels come from the dataset. Two of the flagged normal clips were checked by eye and were correctly labelled; the rest have not been checked.
+* `confidence` from notebook 03 is not calibrated. It reflects how certain the model's prose sounds, not whether the incident happened.
+* The prompt names shoplifting and lists examples (hiding items in bags, bypassing checkout). On footage with nothing to report, the model sometimes recasts ordinary actions as those examples. A neutral first pass ("describe what happens") followed by a separate theft check is a likely fix, but has not been tested.
